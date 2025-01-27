@@ -39,7 +39,7 @@ for movie in movies:
         movie_soup = BeautifulSoup(movie_page.text, "html.parser")
 
         # Extract genre correctly
-        genre_elements = movie_soup.select("div[data-testid='genres'] a")
+        genre_elements = movie_soup.select("a[href*='tt_ov_in']")
         genre = ", ".join([g.text for g in genre_elements]) if genre_elements else "Not Available"
 
         # Extract director
@@ -48,7 +48,7 @@ for movie in movies:
 
         # Extract cast (first 3 actors)
         cast_elements = movie_soup.select("a[href*='tt_ov_st']")
-        cast = ", ".join([c.text.strip() for c in cast_elements[:3]]) if cast_elements else "Not Available"
+        cast = ", ".join([c.text.strip() for c in cast_elements[1:4]]) if cast_elements else "Not Available"
 
         # Extract plot
         plot_element = movie_soup.select_one("span[data-testid='plot-xl']")
