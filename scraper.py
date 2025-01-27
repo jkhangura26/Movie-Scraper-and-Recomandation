@@ -38,13 +38,29 @@ for movie in movies:
         movie_page = requests.get(movie_url, headers=headers)
         movie_soup = BeautifulSoup(movie_page.text, "html.parser")
 
-        # Extract additional details
-        genre = ", ".join([g.text for g in movie_soup.select("a[href*='genre']")]) or "Not Available"
-        director = movie_soup.select_one("a[href*='tt_ov_dr']").text if movie_soup.select_one("a[href*='tt_ov_dr']") else "Not Available"
-        cast = ", ".join([c.text for c in movie_soup.select("a[href*='tt_ov_st']")[:3]]) or "Not Available"
-        plot = movie_soup.select_one("span[data-testid='plot-xl']").text if movie_soup.select_one("span[data-testid='plot-xl']") else "Not Available"
-        runtime = movie_soup.select_one("li[data-testid='title-techspec_runtime']").text if movie_soup.select_one("li[data-testid='title-techspec_runtime']") else "Not Available"
-        poster = movie_soup.select_one("img.ipc-image")["src"] if movie_soup.select_one("img.ipc-image") else "Not Available"
+        # Extract genre correctly
+        genre_elements = movie_soup.select("div[data-testid='genres'] a")
+        genre = ", ".join([g.text for g in genre_elements]) if genre_elements else "Not Available"
+
+        # Extract director
+        director_element = movie_soup.select_one("a[href*='tt_ov_dr']")
+        director = director_element.text if director_element else "Not Available"
+
+        # Extract cast (first 3 actors)
+        cast_elements = movie_soup.select("a[href*='tt_ov_st']")
+        cast = ", ".join([c.text.strip() for c in cast_elements[:3]]) if cast_elements else "Not Available"
+
+        # Extract plot
+        plot_element = movie_soup.select_one("span[data-testid='plot-xl']")
+        plot = plot_element.text if plot_element else "Not Available"
+
+        # Extract runtime correctly without extra text
+        runtime_element = movie_soup.select_one("li[data-testid='title-techspec_runtime']")
+        runtime = runtime_element.text.replace("Runtime", "").strip() if runtime_element else "Not Available"
+
+        # Extract poster
+        poster_element = movie_soup.select_one("img.ipc-image")
+        poster = poster_element["src"] if poster_element else "Not Available"
 
         # Append to list
         movie_data.append({
