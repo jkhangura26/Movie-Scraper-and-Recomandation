@@ -18,6 +18,7 @@ def get_movie_details(movie_url):
 
         rating_element = movie_soup.find("div", {"data-testid": "hero-rating-bar__aggregate-rating__score"})
         rating = rating_element.text.strip() if rating_element else "N/A"
+        rating = rating.replace('/10', '').strip() if rating != "N/A" else "N/A"
 
         genre_elements = movie_soup.select("div[data-testid='interests'] a")
         genre = ", ".join([g.text for g in genre_elements]) if genre_elements else "N/A"
