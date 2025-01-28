@@ -1,4 +1,6 @@
 import pandas as pd
+import sys
+import subprocess
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -38,6 +40,17 @@ def get_recommendations(movie_title, df, similarity_matrix, top_n=5):
     
     return top_movies
 
+# Check for command line argument
+if len(sys.argv) < 2:
+    print("Usage: python3 reccomend.py \"Movie Name\"")
+    sys.exit(1)
+
+movie_name = sys.argv[1]  # Get the movie name from the command line argument
+
+# Call the scraper.py script to scrape the movie details
+print(f"Scraping movie details for: {movie_name}")
+subprocess.run(['python3', 'scraper.py', movie_name])
+
 # Load and process the data
 file_path = "movies.csv"  # Update path if needed
 movies_df = load_data(file_path)
@@ -45,7 +58,6 @@ movies_df = preprocess_data(movies_df)
 similarity_matrix = build_similarity_matrix(movies_df)
 
 # Get recommendations
-movie_name = "Forrest Gump"
 recommendations = get_recommendations(movie_name, movies_df, similarity_matrix, top_n=5)
 
 print(f"Movies similar to '{movie_name}':")
