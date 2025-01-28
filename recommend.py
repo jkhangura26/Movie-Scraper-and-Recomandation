@@ -45,20 +45,30 @@ if len(sys.argv) < 2:
     print("Usage: python3 reccomend.py \"Movie Name\"")
     sys.exit(1)
 
-movie_name = sys.argv[1]  # Get the movie name from the command line argument
+movie_name_input = sys.argv[1]  # Get the movie name from the command line argument
 
-# Call the scraper.py script to scrape the movie details
-print(f"Scraping movie details for: {movie_name}")
-subprocess.run(['python3', 'scraper.py', movie_name])
+# Call the scraper.py script to scrape the movie details, passing the search term
+print(f"Searching and scraping movie details for: {movie_name_input}")
+subprocess.run(['python3', 'scraper.py', movie_name_input])
+
+# Now, we need to check the exact movie title returned by IMDb after scraping
+# This is the movie title that was actually scraped from IMDb after the search
 
 # Load and process the data
 file_path = "movies.csv"  # Update path if needed
 movies_df = load_data(file_path)
+
+# After scraping, the movie name should be the actual movie title as it appears in the CSV
+# Use the scraped movie name to find recommendations
+# Assuming that the latest movie scraped is the one added to the CSV
+scraped_movie_title = movies_df.iloc[-1]["Title"]
+
+# Preprocess the data and build similarity matrix
 movies_df = preprocess_data(movies_df)
 similarity_matrix = build_similarity_matrix(movies_df)
 
 # Get recommendations
-recommendations = get_recommendations(movie_name, movies_df, similarity_matrix, top_n=5)
+recommendations = get_recommendations(scraped_movie_title, movies_df, similarity_matrix, top_n=5)
 
-print(f"Movies similar to '{movie_name}':")
+print(f"Movies similar to '{scraped_movie_title}':")
 print(recommendations)
