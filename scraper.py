@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import requests
+import sys
 
 def get_movie_details(movie_url):
     """Universal movie detail extraction with rating and genre"""
@@ -45,7 +46,7 @@ def get_movie_details(movie_url):
         print(f"Error getting details: {str(e)}")
         return None
 
-def scraper(movie_name=None):
+def scraper(movie_names):
     """Main scraping function"""
     driver = webdriver.Chrome()
     movie_data = []
@@ -58,30 +59,34 @@ def scraper(movie_name=None):
 
         existing_titles = set(existing_df["Title"]) if not existing_df.empty else set()
 
-        if movie_name:
+        for movie_name in movie_names:
             search_query = movie_name.replace(" ", "+")
             search_url = f"https://www.imdb.com/find?q={search_query}"
             driver.get(search_url)
             time.sleep(2)
 
-            first_result = driver.find_element(By.CSS_SELECTOR, "a.ipc-metadata-list-summary-item__t")
-            movie_url = first_result.get_attribute("href")
-            
+            try:
+                first_result = driver.find_element(By.CSS_SELECTOR, "a.ipc-metadata-list-summary-item__t")
+                movie_url = first_result.get_attribute("href")
+            except:
+                print(f"Movie '{movie_name}' not found.")
+                continue
+
             if "/title/tt" not in movie_url:
-                print("Movie page not found")
-                return
+                print(f"Movie page for '{movie_name}' not found.")
+                continue
 
             title = first_result.text.strip()
             if title in existing_titles:
                 print(f"{title} is already in movies.csv, skipping.")
-                return
+                continue
 
             year_element = driver.find_element(By.CSS_SELECTOR, "div.ipc-metadata-list-summary-item__tc li")
             year = year_element.text.strip() if year_element else "N/A"
 
             details = get_movie_details(movie_url)
             if not details:
-                return
+                continue
 
             movie_entry = {
                 "Title": title,
@@ -102,4 +107,21 @@ def scraper(movie_name=None):
     finally:
         driver.quit()
 
-scraper("Avengers: age of ultron")
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python script.py \"Movie Name\" or python script.py movie_list.txt")
+        sys.exit(1)
+    
+    input_arg = sys.argv[1]
+    
+    if input_arg.endswith(".txt"):
+        try:
+            with open(input_arg, "r") as file:
+                movie_list = [line.strip() for line in file.readlines() if line.strip()]
+        except FileNotFoundError:
+            print(f"File '{input_arg}' not found.")
+            sys.exit(1)
+    else:
+        movie_list = [input_arg]
+
+    scraper(movie_list)
