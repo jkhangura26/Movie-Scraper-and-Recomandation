@@ -8,7 +8,7 @@ from selenium.webdriver.chrome.options import Options
 import requests
 
 def get_movie_details(movie_url):
-    """Universal movie detail extraction (used for both Top 250 and search results)"""
+    """Universal movie detail extraction with rating and genre"""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
@@ -17,9 +17,15 @@ def get_movie_details(movie_url):
         response = requests.get(movie_url, headers=headers)
         movie_soup = BeautifulSoup(response.text, "html.parser")
 
-        # Extract details using same selectors as Top 250 scraping
-        genre = ", ".join([g.text for g in movie_soup.select("div[data-testid='genres'] a")]) or "N/A"
-        
+        # Extract rating from movie page
+        rating_element = movie_soup.find("div", {"data-testid": "hero-rating-bar__aggregate-rating__score"})
+        rating = rating_element.text.strip() if rating_element else "N/A"
+
+        # Extract genre
+        genre_elements = movie_soup.select("div[data-testid='interests'] a")
+        genre = ", ".join([g.text for g in genre_elements]) if genre_elements else "N/A"
+
+        # Other details
         director_section = movie_soup.find("li", {"data-testid": "title-pc-principal-credit"})
         director = ", ".join([a.text for a in director_section.select("a")]) if director_section else "N/A"
         
@@ -32,6 +38,7 @@ def get_movie_details(movie_url):
         poster = movie_soup.select_one("img.ipc-image")["src"] if movie_soup.select_one("img.ipc-image") else "N/A"
 
         return {
+            "Rating": rating,
             "Genre": genre,
             "Director": director,
             "Cast": cast,
@@ -45,7 +52,7 @@ def get_movie_details(movie_url):
         return None
 
 def scraper(movie_name=None):
-    """Can scrape Top 250 (when no name provided) or specific movies"""
+    """Main scraping function with both modes"""
 
     driver = webdriver.Chrome()
 
@@ -66,12 +73,12 @@ def scraper(movie_name=None):
                 print("Movie page not found")
                 return
 
-            # Extract basic info from search result
+            # Get basic info from search result
             title = first_result.text.strip()
-            year = driver.find_element(By.CSS_SELECTOR, "div.ipc-metadata-list-summary-item__tc li").text.strip()
-            rating = "N/A"  # Rating not available in search results
-            
-            # Get detailed info
+            year_element = driver.find_element(By.CSS_SELECTOR, "div.ipc-metadata-list-summary-item__tc li")
+            year = year_element.text.strip() if year_element else "N/A"
+
+            # Get detailed info including rating and genre
             details = get_movie_details(movie_url)
             if not details:
                 return
@@ -79,7 +86,6 @@ def scraper(movie_name=None):
             movie_entry = {
                 "Title": title,
                 "Year": year,
-                "Rating": rating,
                 **details
             }
 
@@ -109,15 +115,17 @@ def scraper(movie_name=None):
                     rating = movie.select_one("span.ipc-rating-star--imdb").get_text(strip=True).split()[0]
                     movie_url = "https://www.imdb.com" + movie.select_one("a.ipc-title-link-wrapper")["href"]
 
+                    # Get additional details
                     details = get_movie_details(movie_url)
                     if not details:
                         continue
 
+                    # Preserve list rating but use detailed genre
                     movie_data.append({
                         "Title": title,
                         "Year": year,
                         "Rating": rating,
-                        **details
+                        **{k: v for k, v in details.items() if k != "Rating"}
                     })
 
                     print(f"Scraped: {title}")
@@ -126,7 +134,7 @@ def scraper(movie_name=None):
                     print(f"Error processing movie: {str(e)}")
                     continue
 
-        # Save to CSV with duplicate check
+        # Save to CSV
         try:
             existing_df = pd.read_csv("movies.csv")
         except (FileNotFoundError, pd.errors.EmptyDataError):
@@ -136,8 +144,6 @@ def scraper(movie_name=None):
             return
 
         new_df = pd.DataFrame(movie_data)
-        
-        # Remove duplicates
         combined_df = pd.concat([existing_df, new_df]).drop_duplicates(
             subset=["Title", "Year"], 
             keep="last"
@@ -149,6 +155,6 @@ def scraper(movie_name=None):
     finally:
         driver.quit()
 
-# Usage examples:
-scraper()  # Scrape Top 250
-# scraper("The Avengers")  # Scrape specific movie
+# Usage:
+# scraper()  # Scrape Top 250 with all details
+scraper("The Avengers")  # Add specific movie with rating and genre
