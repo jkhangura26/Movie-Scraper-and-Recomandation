@@ -46,23 +46,17 @@ def get_movie_details(movie_url):
         return None
 
 def scraper(movie_name=None):
-    """Main scraping function with both modes"""
+    """Main scraping function"""
     driver = webdriver.Chrome()
     movie_data = []
     
     try:
-        scraped_movies_file = "scraped_movies.csv"
-        try:
-            scraped_movies_df = pd.read_csv(scraped_movies_file)
-        except (FileNotFoundError, pd.errors.EmptyDataError):
-            scraped_movies_df = pd.DataFrame()
-
-        scraped_titles = set(scraped_movies_df["Title"]) if not scraped_movies_df.empty else set()
-        
         try:
             existing_df = pd.read_csv("movies.csv")
         except (FileNotFoundError, pd.errors.EmptyDataError):
             existing_df = pd.DataFrame()
+
+        existing_titles = set(existing_df["Title"]) if not existing_df.empty else set()
 
         if movie_name:
             search_query = movie_name.replace(" ", "+")
@@ -78,8 +72,8 @@ def scraper(movie_name=None):
                 return
 
             title = first_result.text.strip()
-            if title in scraped_titles:
-                print(f"{title} is already scraped, skipping.")
+            if title in existing_titles:
+                print(f"{title} is already in movies.csv, skipping.")
                 return
 
             year_element = driver.find_element(By.CSS_SELECTOR, "div.ipc-metadata-list-summary-item__tc li")
@@ -103,12 +97,9 @@ def scraper(movie_name=None):
         new_df = pd.DataFrame(movie_data)
         combined_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=["Title", "Year"], keep="last")
         combined_df.to_csv("movies.csv", index=False)
-
-        scraped_combined_df = pd.concat([scraped_movies_df, new_df]).drop_duplicates(subset=["Title"], keep="last")
-        scraped_combined_df.to_csv(scraped_movies_file, index=False)
         
-        print(f"Successfully updated databases with {len(new_df)} new entries")
+        print(f"Successfully updated movies.csv with {len(new_df)} new entries")
     finally:
         driver.quit()
 
-scraper("The Avengers")
+scraper("Avengers: age of ultron")
