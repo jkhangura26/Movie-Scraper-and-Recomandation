@@ -1,8 +1,8 @@
 import pandas as pd
-import sys
-import subprocess
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import subprocess
+import sys
 
 def load_data(file_path):
     """Load movies dataset from CSV file."""
@@ -40,35 +40,61 @@ def get_recommendations(movie_title, df, similarity_matrix, top_n=5):
     
     return top_movies
 
-# Check for command line argument
+def get_correct_title_from_csv(input_title, df):
+    """Resolve the correct movie title from the CSV."""
+    matched_title = None
+    highest_similarity = 0.0
+
+    # Iterate over titles in the CSV
+    for title in df["Title"]:
+        # Compute the similarity score
+        similarity_score = get_title_similarity(input_title, title)
+        
+        if similarity_score > highest_similarity:
+            highest_similarity = similarity_score
+            matched_title = title
+
+    return matched_title
+
+def get_title_similarity(title1, title2):
+    """Compute a simple similarity score between two titles."""
+    title1, title2 = title1.lower(), title2.lower()
+    
+    # Check for simple typo tolerance by calculating the proportion of matching characters
+    common_characters = sum(1 for c1, c2 in zip(title1, title2) if c1 == c2)
+    return common_characters / max(len(title1), len(title2))
+
+# Assuming the movie name is passed as a command line argument
 if len(sys.argv) < 2:
-    print("Usage: python3 reccomend.py \"Movie Name\"")
+    print("Usage: python reccomend.py \"Movie Name\"")
     sys.exit(1)
 
-movie_name_input = sys.argv[1]  # Get the movie name from the command line argument
+# Step 1: Scrape the movie information (calling scraper.py)
+movie_name = sys.argv[1]
 
-# Call the scraper.py script to scrape the movie details, passing the search term
-print(f"Searching and scraping movie details for: {movie_name_input}")
-subprocess.run(['python3', 'scraper.py', movie_name_input])
+# Run the scraper.py script for the given movie
+subprocess.run(["python3", "scraper.py", movie_name])
 
-# Now, we need to check the exact movie title returned by IMDb after scraping
-# This is the movie title that was actually scraped from IMDb after the search
-
-# Load and process the data
+# Step 2: Load the CSV file to get the latest movie data
 file_path = "movies.csv"  # Update path if needed
 movies_df = load_data(file_path)
 
-# After scraping, the movie name should be the actual movie title as it appears in the CSV
-# Use the scraped movie name to find recommendations
-# Assuming that the latest movie scraped is the one added to the CSV
-scraped_movie_title = movies_df.iloc[-1]["Title"]
+# Step 3: Resolve the correct title from the CSV (even if there's a typo in the input)
+correct_movie_title = get_correct_title_from_csv(movie_name, movies_df)
 
-# Preprocess the data and build similarity matrix
+if correct_movie_title:
+    print(f"Using movie title: '{correct_movie_title}' for recommendations.")
+else:
+    print(f"Movie '{movie_name}' not found in the dataset.")
+    sys.exit(1)
+
+# Step 4: Preprocess the data and build the similarity matrix
 movies_df = preprocess_data(movies_df)
 similarity_matrix = build_similarity_matrix(movies_df)
 
-# Get recommendations
-recommendations = get_recommendations(scraped_movie_title, movies_df, similarity_matrix, top_n=5)
+# Step 5: Get recommendations
+recommendations = get_recommendations(correct_movie_title, movies_df, similarity_matrix, top_n=5)
 
-print(f"Movies similar to '{scraped_movie_title}':")
+# Display recommendations
+print(f"Movies similar to '{correct_movie_title}':")
 print(recommendations)
