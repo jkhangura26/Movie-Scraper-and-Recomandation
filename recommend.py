@@ -45,7 +45,7 @@ movies_df = preprocess_data(movies_df)
 similarity_matrix = build_similarity_matrix(movies_df)
 
 # Get recommendations
-movie_name = "The Dark Knight"
+movie_name = "Forrest Gump"
 recommendations = get_recommendations(movie_name, movies_df, similarity_matrix, top_n=5)
 
 print(f"Movies similar to '{movie_name}':")
