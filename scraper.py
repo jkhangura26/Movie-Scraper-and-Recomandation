@@ -51,7 +51,6 @@ def scraper(movie_names):
     """Main scraping function"""
     driver = webdriver.Chrome()
     movie_data = []
-    processed_titles = []  # Collect all processed titles
     
     try:
         try:
@@ -63,7 +62,7 @@ def scraper(movie_names):
 
         for movie_name in movie_names:
             search_query = movie_name.replace(" ", "+")
-            search_url = f"https://www.imdb.com/find?q={search_query}&s=tt&ttype=ft&ref_=fn_mv"
+            search_url = f"https://www.imdb.com/find?q={search_query}"
             driver.get(search_url)
             time.sleep(2)
 
@@ -71,18 +70,16 @@ def scraper(movie_names):
                 first_result = driver.find_element(By.CSS_SELECTOR, "a.ipc-metadata-list-summary-item__t")
                 movie_url = first_result.get_attribute("href")
             except:
-                print(f"Movie '{movie_name}' not found.")
+                print(f"Movie '{movie_name}' not found.", file=sys.stderr)  # Redirect to stderr
                 continue
 
             if "/title/tt" not in movie_url:
-                print(f"Movie page for '{movie_name}' not found.")
+                print(f"Movie page for '{movie_name}' not found.", file=sys.stderr)  # Redirect to stderr
                 continue
 
             title = first_result.text.strip()
-            processed_titles.append(title)  # Add to processed titles
-
             if title in existing_titles:
-                print(f"{title} is already in movies.csv, skipping.")
+                print(f"{title} is already in movies.csv, skipping.", file=sys.stderr)  # Redirect to stderr
                 continue
 
             year_element = driver.find_element(By.CSS_SELECTOR, "div.ipc-metadata-list-summary-item__tc li")
@@ -103,15 +100,16 @@ def scraper(movie_names):
             new_df = pd.DataFrame(movie_data)
             combined_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=["Title", "Year"], keep="last")
             combined_df.to_csv("movies.csv", index=False)
-            print(f"Successfully updated movies.csv with {len(new_df)} new entries")
+            print(f"Successfully updated movies.csv with {len(new_df)} new entries", file=sys.stderr)  # Redirect to stderr
         
-        return processed_titles  # Return all processed titles
+        # Return the exact title(s) of the movie(s) added
+        return [movie["Title"] for movie in movie_data]
     finally:
         driver.quit()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python scraper.py \"Movie Name\" or python scraper.py movie_list.txt")
+        print("Usage: python scraper.py \"Movie Name\" or python scraper.py movie_list.txt", file=sys.stderr)
         sys.exit(1)
     
     input_arg = sys.argv[1]
@@ -121,9 +119,13 @@ if __name__ == "__main__":
             with open(input_arg, "r") as file:
                 movie_list = [line.strip() for line in file.readlines() if line.strip()]
         except FileNotFoundError:
-            print(f"File '{input_arg}' not found.")
+            print(f"File '{input_arg}' not found.", file=sys.stderr)
             sys.exit(1)
     else:
         movie_list = [input_arg]
 
-    scraper(movie_list)
+    titles_added = scraper(movie_list)
+    if titles_added:
+        print("\n".join(titles_added))  # Print only the exact titles to stdout
+    else:
+        print("No titles added.", file=sys.stderr)

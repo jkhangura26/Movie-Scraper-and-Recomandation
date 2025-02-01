@@ -72,11 +72,10 @@ def search():
         # Reload movies after scraping
         movies_df = load_movies()
         
-        # Find the exact title added by the scraper
-        for title in movies_df["Title"]:
-            if query.lower() in title.lower():
-                matched_title = title
-                break
+        # Use the exact title returned by the scraper
+        scraper_output = result.stdout.strip()
+        if scraper_output:
+            matched_title = scraper_output  # Use the exact title from stdout
     
     if matched_title:
         return redirect(url_for("movie_details", title=matched_title))
