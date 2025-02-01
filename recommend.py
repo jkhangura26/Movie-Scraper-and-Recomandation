@@ -20,7 +20,7 @@ def build_similarity_matrix(df):
     tfidf_matrix = vectorizer.fit_transform(df["combined_features"])
     return cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-def get_recommendations(movie_title, df, similarity_matrix, top_n=5):
+def get_recommendations(movie_title, df, similarity_matrix, top_n=10):
     """Find similar movies based on the given title."""
     try:
         idx = df[df["Title"] == movie_title].index[0]
