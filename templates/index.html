@@ -1,26 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Recommendations</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <h1>Movie Recommendations</h1>
-    <form action="/search" method="POST">
-        <input type="text" name="query" placeholder="Search for a movie..." required>
-        <button type="submit">Search</button>
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="text-center mb-4">Find Your Next Favorite Movie</h1>
+    <form action="/search" method="POST" class="mb-5 text-center">
+        <div class="input-group mx-auto" style="max-width: 500px;">
+            <input type="text" name="query" class="form-control" placeholder="Search for a movie..." required>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
     </form>
-    <div class="movie-grid">
+
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
         {% for movie in movies %}
-        <div class="movie-card">
-            <a href="{{ url_for('movie_details', title=movie['Title']) }}">
-                <img src="{{ movie['Poster'] }}" alt="{{ movie['Title'] }}">
-                <h3>{{ movie['Title'] }} ({{ movie['Year'] }})</h3>
-            </a>
+        <div class="col">
+            <div class="card h-100 shadow">
+                <img src="{{ movie['Poster'] }}" class="card-img-top" alt="{{ movie['Title'] }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ movie['Title'] }} ({{ movie['Year'] }})</h5>
+                    <a href="{{ url_for('movie_details', title=movie['Title']) }}" class="btn btn-primary">Details</a>
+                </div>
+            </div>
         </div>
         {% endfor %}
     </div>
-</body>
-</html>
+{% endblock %}

@@ -1,27 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ movie.Title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <h1>{{ movie.Title }} ({{ movie.Year }})</h1>
-    <img src="{{ movie.Poster }}" alt="{{ movie.Title }}">
-    <p><strong>Rating:</strong> {{ movie.Rating }}</p>
-    <p><strong>Genre:</strong> {{ movie.Genre }}</p>
-    <p><strong>Director:</strong> {{ movie.Director }}</p>
-    <p><strong>Cast:</strong> {{ movie.Cast }}</p>
-    <p><strong>Plot:</strong> {{ movie.Plot }}</p>
-    <p><strong>Runtime:</strong> {{ movie.Runtime }}</p>
+{% extends "base.html" %}
 
-    <h2>Recommended Movies</h2>
-    <ul>
+{% block title %}{{ movie.Title }}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-4 text-center">
+            <img src="{{ movie.Poster }}" class="img-fluid rounded shadow" alt="{{ movie.Title }}">
+        </div>
+        <div class="col-md-8">
+            <h1>{{ movie.Title }} ({{ movie.Year }})</h1>
+            <p><strong>Rating:</strong> {{ movie.Rating }}</p>
+            <p><strong>Genre:</strong> {{ movie.Genre }}</p>
+            <p><strong>Director:</strong> {{ movie.Director }}</p>
+            <p><strong>Cast:</strong> {{ movie.Cast }}</p>
+            <p><strong>Plot:</strong> {{ movie.Plot }}</p>
+            <p><strong>Runtime:</strong> {{ movie.Runtime }}</p>
+        </div>
+    </div>
+
+    <h2 class="mt-5">Recommended Movies</h2>
+    <div class="list-group">
         {% for rec in recommendations %}
-        <li><a href="{{ url_for('movie_details', title=rec) }}">{{ rec }}</a></li>
+        <a href="{{ url_for('movie_details', title=rec) }}" class="list-group-item list-group-item-action">{{ rec }}</a>
         {% endfor %}
-    </ul>
-    <a href="{{ url_for('index') }}">Back to Home</a>
-</body>
-</html>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+{% endblock %}
