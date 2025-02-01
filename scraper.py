@@ -51,6 +51,7 @@ def scraper(movie_names):
     """Main scraping function"""
     driver = webdriver.Chrome()
     movie_data = []
+    titles_added_or_existing = []  
     
     try:
         try:
@@ -80,6 +81,7 @@ def scraper(movie_names):
             title = first_result.text.strip()
             if title in existing_titles:
                 print(f"{title} is already in movies.csv, skipping.", file=sys.stderr)
+                titles_added_or_existing.append(title)  # Add the title to the list even if it exists
                 continue
 
             year_element = driver.find_element(By.CSS_SELECTOR, "div.ipc-metadata-list-summary-item__tc li")
@@ -95,6 +97,7 @@ def scraper(movie_names):
                 **details
             }
             movie_data.append(movie_entry)
+            titles_added_or_existing.append(title)  # Add the title to the list if it's new
         
         if movie_data:
             new_df = pd.DataFrame(movie_data)
@@ -102,8 +105,8 @@ def scraper(movie_names):
             combined_df.to_csv("movies.csv", index=False)
             print(f"Successfully updated movies.csv with {len(new_df)} new entries", file=sys.stderr)
         
-        # Return the exact title(s) of the movie(s) added
-        return [movie["Title"] for movie in movie_data]
+        # Return the titles of movies added or already existing
+        return titles_added_or_existing
     finally:
         driver.quit()
 

@@ -51,38 +51,41 @@ def search():
     
     movies_df = load_movies()
     
-    # Check if a movie exists (using case-insensitive substring matching)
+    # Attempt to find an exact match (ignoring case)
     matched_title = None
     for title in movies_df["Title"]:
-        if query.lower() in title.lower():
+        if query.lower() == title.lower():
             matched_title = title
             break
 
+    # If no exact match is found, run the scraper.
     if not matched_title:
-        # Run the scraper to add the movie if not found
         result = subprocess.run(
             ["python", "scraper.py", query],
             capture_output=True,
             text=True
         )
-        
         if result.returncode != 0:
             return f"Error adding movie: {result.stderr}", 500
         
-        # The scraper is expected to print the proper title of the movie to stdout.
+        # Get the proper title from the scraper's output (first non-empty line)
         scraper_output = result.stdout.strip()
         if scraper_output:
-            # Take the first valid line (i.e. the proper movie title) from the scraper output.
             proper_title = next((line.strip() for line in scraper_output.splitlines() if line.strip()), None)
-            if proper_title:
-                # Reload movies.csv to pick up the new entry
-                movies_df = load_movies()
-                # Now try to find an exact match for the proper title.
-                for title in movies_df["Title"]:
-                    if proper_title.lower() == title.lower():
-                        matched_title = title
-                        break
-    
+        else:
+            proper_title = None
+
+        # Reload the CSV to pick up any newly added movie.
+        movies_df = load_movies()
+        if proper_title:
+            for title in movies_df["Title"]:
+                if proper_title.lower() == title.lower():
+                    matched_title = title
+                    break
+            # If no match is found in the CSV, default to the scraped title.
+            if not matched_title:
+                matched_title = proper_title
+
     if matched_title:
         return redirect(url_for("movie_details", title=matched_title))
     else:
