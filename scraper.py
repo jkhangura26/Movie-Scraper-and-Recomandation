@@ -51,7 +51,6 @@ def scraper(movie_names):
     """Main scraping function"""
     driver = webdriver.Chrome()
     movie_data = []
-    processed_titles = []  # Collect all processed titles
     
     try:
         try:
@@ -71,18 +70,16 @@ def scraper(movie_names):
                 first_result = driver.find_element(By.CSS_SELECTOR, "a.ipc-metadata-list-summary-item__t")
                 movie_url = first_result.get_attribute("href")
             except:
-                sys.stderr.write(f"Movie '{movie_name}' not found.\n")
+                print(f"Movie '{movie_name}' not found.")
                 continue
 
             if "/title/tt" not in movie_url:
-                sys.stderr.write(f"Movie page for '{movie_name}' not found.\n")
+                print(f"Movie page for '{movie_name}' not found.")
                 continue
 
             title = first_result.text.strip()
-            processed_titles.append(title)  # Add to processed titles
-
             if title in existing_titles:
-                sys.stderr.write(f"{title} is already in movies.csv, skipping.\n")
+                print(f"{title} is already in movies.csv, skipping.")
                 continue
 
             year_element = driver.find_element(By.CSS_SELECTOR, "div.ipc-metadata-list-summary-item__tc li")
@@ -103,15 +100,13 @@ def scraper(movie_names):
             new_df = pd.DataFrame(movie_data)
             combined_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=["Title", "Year"], keep="last")
             combined_df.to_csv("movies.csv", index=False)
-            sys.stderr.write(f"Successfully updated movies.csv with {len(new_df)} new entries\n")
-        
-        return processed_titles  # Return all processed titles
+            print(f"Successfully updated movies.csv with {len(new_df)} new entries")
     finally:
         driver.quit()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        sys.stderr.write("Usage: python scraper.py \"Movie Name\" or python scraper.py movie_list.txt\n")
+        print("Usage: python scraper.py \"Movie Name\" or python scraper.py movie_list.txt")
         sys.exit(1)
     
     input_arg = sys.argv[1]
@@ -121,13 +116,9 @@ if __name__ == "__main__":
             with open(input_arg, "r") as file:
                 movie_list = [line.strip() for line in file.readlines() if line.strip()]
         except FileNotFoundError:
-            sys.stderr.write(f"File '{input_arg}' not found.\n")
+            print(f"File '{input_arg}' not found.")
             sys.exit(1)
     else:
         movie_list = [input_arg]
 
-    titles_processed = scraper(movie_list)
-    if titles_processed:
-        print("\n".join(titles_processed))
-    else:
-        print("No titles processed.")
+    scraper(movie_list)
