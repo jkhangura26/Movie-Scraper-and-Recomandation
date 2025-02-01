@@ -1,27 +1,26 @@
+# Movie Recommendation Web Application
 
-# Movie Scraper & Recommendation System
+A Flask-based web application for exploring movies and receiving personalized recommendations powered by a content-based recommendation system.
 
 ## Overview
-This project includes two Python scripts: `scraper.py` and `recommend.py`. 
 
-- `scraper.py` scrapes movie details (such as rating, genre, director, plot, etc.) from IMDb and stores them in a CSV file (`movies.csv`).
-- `recommend.py` recommends movies similar to a given movie based on content features using cosine similarity.
+This project combines web development and machine learning to create a movie recommendation platform. Users can search for movies, view detailed information, and get AI-generated recommendations. The system uses **TF-IDF vectorization** and **cosine similarity** to suggest movies based on combined features like genre, cast, and plot.
 
-## Requirements
-- Python 3.x
-- Selenium
-- BeautifulSoup
-- Pandas
-- Scikit-learn
-- Chrome WebDriver (for Selenium)
+## Key Features
 
-## Files
+- **Movie Search**: Find movies by title; automatically adds new entries via scraper if not found.
+- **Detailed View**: Display movie metadata (year, rating, director, cast, plot, runtime, poster).
+- **Smart Recommendations**: Get 10 similar movies using ML-based content filtering.
+- **Dynamic Scraping**: Integrates with `scraper.py` (not included) to fetch and add new movies on-demand.
+- **CSV Backend**: Uses `movies.csv` as a lightweight database with 250+ entries.
 
-### 1. `scraper.py`
-This script is responsible for scraping movie details from IMDb and saving them in a CSV file.
+## Technical Architecture
 
-The CSV file `movies.csv` will be updated with new movie data. If `movies.csv` already exists, new entries are appended while avoiding duplicates based on movie title and year.
-
-### 2. `recommend.py`
-This script provides movie recommendations based on a given movie's title using a content-based filtering approach. It uses a TF-IDF vectorizer and cosine similarity to compare movie features.
+### Core Components
+- **Backend**: Flask (Python) for routing and business logic.
+- **Data Processing**: pandas for CSV handling and feature engineering.
+- **ML Pipeline**: 
+  - **TF-IDF Vectorization**
+  - **Similarity Scoring**
+- **Subprocess Management**: Executes recommendation script as separate process.
 
