@@ -63,7 +63,7 @@ def scraper(movie_names):
 
         for movie_name in movie_names:
             search_query = movie_name.replace(" ", "+")
-            search_url = f"https://www.imdb.com/find?q={search_query}"
+            search_url = f"https://www.imdb.com/find?q={search_query}&s=tt&ttype=ft&ref_=fn_mv"
             driver.get(search_url)
             time.sleep(2)
 
