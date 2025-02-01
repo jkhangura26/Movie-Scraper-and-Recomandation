@@ -51,6 +51,7 @@ def scraper(movie_names):
     """Main scraping function"""
     driver = webdriver.Chrome()
     movie_data = []
+    processed_titles = []  # Collect all processed titles
     
     try:
         try:
@@ -78,6 +79,8 @@ def scraper(movie_names):
                 continue
 
             title = first_result.text.strip()
+            processed_titles.append(title)  # Add to processed titles
+
             if title in existing_titles:
                 print(f"{title} is already in movies.csv, skipping.")
                 continue
@@ -101,6 +104,8 @@ def scraper(movie_names):
             combined_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=["Title", "Year"], keep="last")
             combined_df.to_csv("movies.csv", index=False)
             print(f"Successfully updated movies.csv with {len(new_df)} new entries")
+        
+        return processed_titles  # Return all processed titles
     finally:
         driver.quit()
 
