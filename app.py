@@ -51,8 +51,14 @@ def search():
     
     movies_df = load_movies()
     
-    # Check if movie exists
-    if query not in movies_df["Title"].values:
+    # Check if movie exists (case-insensitive)
+    matched_title = None
+    for title in movies_df["Title"]:
+        if query.lower() == title.lower():
+            matched_title = title
+            break
+    
+    if not matched_title:
         # Run scraper to add the movie
         result = subprocess.run(
             ["python", "scraper.py", query],
@@ -62,12 +68,18 @@ def search():
         
         if result.returncode != 0:
             return f"Error adding movie: {result.stderr}", 500
-            
-        # Check again after scraping
+        
+        # Reload movies after scraping
         movies_df = load_movies()
+        
+        # Find the exact title added by the scraper
+        for title in movies_df["Title"]:
+            if query.lower() in title.lower():
+                matched_title = title
+                break
     
-    if query in movies_df["Title"].values:
-        return redirect(url_for("movie_details", title=query))
+    if matched_title:
+        return redirect(url_for("movie_details", title=matched_title))
     else:
         return "Movie not found and could not be added.", 404
 
