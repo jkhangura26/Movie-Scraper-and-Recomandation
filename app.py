@@ -51,15 +51,15 @@ def search():
     
     movies_df = load_movies()
     
-    # Check if movie exists (case-insensitive)
+    # Check if a movie exists (using case-insensitive substring matching)
     matched_title = None
     for title in movies_df["Title"]:
-        if query.lower() == title.lower():
+        if query.lower() in title.lower():
             matched_title = title
             break
-    
+
     if not matched_title:
-        # Run scraper to add the movie
+        # Run the scraper to add the movie if not found
         result = subprocess.run(
             ["python", "scraper.py", query],
             capture_output=True,
@@ -69,13 +69,19 @@ def search():
         if result.returncode != 0:
             return f"Error adding movie: {result.stderr}", 500
         
-        # Reload movies after scraping
-        movies_df = load_movies()
-        
-        # Use the exact title returned by the scraper
+        # The scraper is expected to print the proper title of the movie to stdout.
         scraper_output = result.stdout.strip()
         if scraper_output:
-            matched_title = scraper_output  # Use the exact title from stdout
+            # Take the first valid line (i.e. the proper movie title) from the scraper output.
+            proper_title = next((line.strip() for line in scraper_output.splitlines() if line.strip()), None)
+            if proper_title:
+                # Reload movies.csv to pick up the new entry
+                movies_df = load_movies()
+                # Now try to find an exact match for the proper title.
+                for title in movies_df["Title"]:
+                    if proper_title.lower() == title.lower():
+                        matched_title = title
+                        break
     
     if matched_title:
         return redirect(url_for("movie_details", title=matched_title))
