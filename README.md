@@ -11,7 +11,7 @@ This project combines web development and machine learning to create a movie rec
 - **Movie Search**: Find movies by title; automatically adds new entries via scraper if not found.
 - **Detailed View**: Display movie metadata (year, rating, director, cast, plot, runtime, poster).
 - **Smart Recommendations**: Get 10 similar movies using ML-based content filtering.
-- **Dynamic Scraping**: Integrates with `scraper.py` (not included) to fetch and add new movies on-demand.
+- **Dynamic Scraping**: Integrates with `scraper.py` to fetch and add new movies on-demand.
 - **CSV Backend**: Uses `movies.csv` as a lightweight database with 250+ entries.
 
 ## Technical Architecture
