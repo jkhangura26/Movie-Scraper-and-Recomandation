@@ -25,3 +25,6 @@ This project combines web development and machine learning to create a movie rec
 - **Subprocess Management**: Executes recommendation script as separate process.
 
 Try it out here at [movie-scraper-and-recommendation.onrender.com](https://movie-scraper-and-recommendation.onrender.com/).
+
+Render takes a little bit to load, it's worth the wait :)
+
