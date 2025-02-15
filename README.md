@@ -1,4 +1,4 @@
-# Movie Recommendation Web Application
+# NextFlick
 
 A Flask-based web application for exploring movies and receiving personalized recommendations powered by a content-based recommendation system.
 
